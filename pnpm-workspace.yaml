@@ -1,0 +1,6 @@
+packages:
+  - apps/web
+  - apps/backend
+  - packages/domain
+  - packages/types
+  - packages/design-system

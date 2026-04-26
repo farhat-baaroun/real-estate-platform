@@ -141,3 +141,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Monorepo caches and deploy artifacts
+.turbo/
+.vercel/
+.idea/
+.DS_Store

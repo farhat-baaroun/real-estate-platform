@@ -1,0 +1,246 @@
+0. Master Architectural Principles
+Clean Architecture – packages/domain contains ALL business logic; frameworks live in infrastructure.
+
+Contract‑First, Backend‑Owned – A single OpenAPI 3.1 YAML file is the source of truth for every endpoint, DTO, and validation rule.
+
+Temporal API – All date handling in the domain layer must use Temporal, never Date.
+
+Optimistic UI – Every mutation uses optimistic updates; all lists paginated.
+
+Testing Pyramid – BDD scenarios → Domain unit tests → API integration tests → E2E smoke tests.
+
+AI Governance – Rules enforced by linters + live MCP documentation servers, not just static prompt files.
+
+STAGE 0: Foundation – Monorepo, Toolchain & Design System
+0.1 Monorepo Scaffolding
+Activities:
+
+pnpm workspace with initial packages:
+
+apps/web (React 19 + TanStack Start)
+
+apps/backend (Fastify)
+
+packages/domain (pure TS)
+
+packages/types (will be generated from contract)
+
+packages/design-system (shadcn/ui + Storybook)
+
+Shared tsconfig, eslint, prettier, .gitignore.
+
+CI skeleton on GitHub Actions (lint, typecheck, test).
+
+Verification gate:
+
+pnpm lint && pnpm typecheck passes everywhere.
+
+Web renders “Hello from Web”, backend serves /health → {"status":"ok"}.
+
+0.2 Design System & shadcn/ui v4 + Storybook
+Goal: A fully working component library with visual testing and documentation.
+
+Steps:
+
+In packages/design-system, run npx shadcn@latest init (choose Tailwind, CSS variables, etc.) to add shadcn/ui v4.
+
+Add the base component set via CLI: npx shadcn@latest add button skeleton card input (at minimum).
+
+Customize Button to support primary | secondary | danger variants and loading state (using Radix Slot).
+
+Set up Storybook 8+ with npx storybook@latest init in the same package, configured for React + Vite + Tailwind.
+
+Create stories for every shadcn component with visual tests (snapshot or Chromatic later).
+
+Create a comprehensive design.md file in the repository root (docs/design.md or tools/ai/design.md) containing:
+
+UI principles: minimal, data‑first, clean.
+
+Component rules: loading states → skeletons, errors → user‑friendly messages, pagination everywhere.
+
+Optimistic updates for all mutations.
+
+Accessibility: all inputs labeled, keyboard navigation.
+
+Do NOT put business logic in components.
+
+Verification gate (before Stage 1):
+
+Storybook starts and shows all custom components correctly.
+
+Playwright or Storybook test‑runner checks that the Button renders states without error.
+
+design.md exists and is up‑to‑date.
+
+STAGE 1: Domain Modeling & BDD (Pure Business Rules)
+Chunk 1.1 – BDD Scenarios
+Gherkin features for the core MVP: Property Listing.
+
+gherkin
+Feature: Publish a property listing
+  Scenario: Owner publishes a listing with price
+    Given an authenticated owner
+    When they create a listing with valid details and a price > 0
+    Then the listing is published and visible to buyers
+
+  Scenario: Cannot publish without a price
+    Given an owner has drafted a listing with no price
+    When they attempt to publish
+    Then the system rejects with "Price is required"
+Chunk 1.2 – Domain Implementation
+
+PropertyListing aggregate
+
+Price value object (using Temporal.Instant for creation timestamps)
+
+publish() method containing all business validations (price mandatory, etc.)
+
+Verification (gate):
+
+Domain unit tests pass.
+
+ESLint rule no-date-import blocks Date inside packages/domain.
+
+STAGE 2: Backend – Contract‑First with OpenAPI, Auth & Reusable Pagination
+2.1 Canonical OpenAPI YAML
+Create specs/openapi.yaml with shared pagination, filtering, and limit components that are reused on every list endpoint.
+
+yaml
+components:
+  parameters:
+    Page:   { in: query, name: page,  schema: { type: integer, minimum: 1, default: 1 } }
+    Limit:  { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    Sort:   { in: query, name: sort,  schema: { type: string, enum: [createdAt_asc, createdAt_desc, price_asc, price_desc] } }
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:   { type: integer }
+        pageCount:    { type: integer }
+        currentPage:  { type: integer }
+        perPage:      { type: integer }
+    ListingFilter:
+      type: object
+      properties:
+        minPrice:  { type: number }
+        maxPrice:  { type: number }
+        bedrooms:  { type: integer }
+        status:    { type: string, enum: [draft, published, archived] }
+    ListingPage:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Listing' } }
+        meta: { $ref: '#/components/schemas/PaginationMeta' }
+2.2 Code Generation
+Generate packages/types, backend route stubs, and Zod validation from the YAML.
+
+2.3 Initial Backend Implementation
+Fastify, use‑cases, Prisma repository, no business logic outside domain.
+
+2.4 SuperTokens Auth
+Add auth endpoints, extend YAML with securitySchemes, re‑generate client, write auth integration tests.
+
+Verification gate:
+
+All integration tests pass (CRUD + auth).
+
+Spectral lint confirms shared pagination components are used, no duplicate definitions.
+
+STAGE 3: Frontend MVP – Direct REST API, No BFF, Using Design System
+3.1 Generate Typed API Client (from YAML)
+The client automatically exposes a single paginated query interface for all list endpoints.
+
+3.2 Build UI with Design System and Design Rules
+Use packages/design-system components (Button, Skeleton, Card) – they already exist and are tested.
+
+TanStack Start routes for listings, create, publish.
+
+Every list view must use the same pagination controls (page, limit, sort) as generated by the contract.
+
+Loading states → <Skeleton> from design system.
+
+Mutations → optimistic updates using TanStack Query.
+
+Error messages shown via inline alerts/Toast (not custom logic).
+
+SuperTokens React SDK wraps the app.
+
+No domain logic leaks into components – only API‑returned data and design‑system components.
+
+3.3 Visual and Interaction Testing
+Storybook stories for new composite components (e.g., ListingCard, PaginatedList).
+
+Visual regression tests (Percy / Chromatic) against Storybook to ensure design.md compliance.
+
+Playwright E2E: full publish flow, also test that skeletons appear during loading, and that optimistic toggles work.
+
+Verification (gate):
+
+E2E passes.
+
+Design‑system components are the only building blocks used (can be enforced by an ESLint rule banning raw HTML inputs except in design‑system).
+
+No new Date() anywhere in web.
+
+Pagination works identically across different pages.
+
+STAGE 4: Optional Read‑Only BFF (GraphQL Middleware)
+Generate a GraphQL schema from the same OpenAPI YAML (auto‑excludes mutations).
+
+apps/bff (GraphQL Yoga) serves it; zero custom logic.
+
+Feature flag (USE_BFF) toggles between REST and GraphQL.
+
+Verification:
+
+Identical data, pagination, and filters with REST vs GraphQL.
+
+Turning off BFF has no effect on frontend.
+
+STAGE 5: AI Governance & Architectural Enforcement
+5.1 MCP Documentation Server with design.md
+Expose live resources:
+
+GET /contract → OpenAPI YAML.
+
+GET /rules/architecture → current lint rules.
+
+GET /rules/design → the design.md contents.
+
+GET /rules/testing → BDD‑to‑test mapping.
+
+5.2 Linter Rules
+Spectral: enforce reusable pagination components, no duplicate filter definitions.
+
+ESLint: no-date-import (domain), no-domain-in-web, no-direct-prisma, and only-design-system-components in web.
+
+Verification:
+
+MCP server returns design.md; AI never suggests raw <button> when <Button> exists.
+
+STAGE 6: DevOps & Deployment (Free Tier)
+GitHub Actions → lint, typecheck, test (unit + integration + e2e), and visual tests (Chromatic).
+
+Deploy previews with Vercel (frontend + Storybook) and Render (backend).
+
+Free tier stack: Vercel, Render, Supabase, self‑hosted SuperTokens, Sentry.
+
+Verification:
+
+One‑click deploy to production.
+
+Storybook is publicly available (e.g., vercel preview URL) for design review.
+
+Monitoring catches runtime errors.
+
+Why shadcn/ui v4 + Storybook + design.md matter here
+shadcn/ui v4 gives you accessible, customizable components out‑of‑the‑box via its CLI, preserving your ability to adapt design tokens later.
+
+Storybook not only develops components in isolation but acts as your visual testing environment, ensuring the design system rules (loading, errors, a11y) are visibly enforced before they reach the app.
+
+design.md is the single living document that both developers and AI refer to. By serving it through MCP, you guarantee the AI never suggests a component that violates the UI principles (e.g., raw alerts instead of the design‑system Toast).
+
+The combination ensures that from day one, every screen is built from pre‑tested, documented, and contract‑aligned building blocks—catching visual regressions, accessibility flaws, and design violations automatically.
+
+One‑sentence summary:
+*We build a production‑ready real‑estate platform in strictly verified slices, with the domain as the single source of truth, an OpenAPI contract that drives a secured backend, an optional read‑only GraphQL layer, a universal pagination and filtering scheme, and a fully tested design system (shadcn/ui v4 + Storybook) governed by a living design.md and AI‑served rules—all deployed on free infrastructure until revenue demands scaling.*
