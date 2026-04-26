@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "real-estate-sb-mcp": {
+      "url": "http://localhost:7007/mcp"
+    }
+  }
+}

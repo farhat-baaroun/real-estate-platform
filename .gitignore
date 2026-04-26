@@ -147,3 +147,11 @@ vite.config.ts.timestamp-*
 .vercel/
 .idea/
 .DS_Store
+
+*storybook.log
+
+# Storybook outputs and caches
+storybook-static/
+**/storybook-static/
+.storybook-cache/
+**/.storybook-cache/
