@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "5.0",
+    "strict": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@real-estate/web": ["./apps/web/src"],
+      "@real-estate/backend": ["./apps/backend/src"],
+      "@real-estate/domain": ["./packages/domain/src"],
+      "@real-estate/types": ["./packages/types/src"],
+      "@real-estate/design-system": ["./packages/design-system/src"]
+    }
+  }
+}
