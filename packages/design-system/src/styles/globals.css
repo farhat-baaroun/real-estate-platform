@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --ds-color-text-primary: #0e0f0c;
+  --ds-color-text-secondary: #454745;
+  --ds-color-text-muted: #868685;
+  --ds-color-surface: #ffffff;
+  --ds-color-surface-soft: #e8ebe6;
+  --ds-color-accent-primary: #9fe870;
+  --ds-color-accent-primary-foreground: #163300;
+  --ds-color-accent-soft: #e2f6d5;
+  --ds-color-accent-hover: #cdffad;
+  --ds-color-danger: #d03238;
+  --ds-color-warning: #ffd11a;
+  --ds-color-positive: #054d28;
+  --ds-color-orange: #ffc091;
+  --ds-color-border-default: rgba(14, 15, 12, 0.12);
+
+  --ds-shadow-ring: rgba(14, 15, 12, 0.12) 0 0 0 1px;
+  --ds-shadow-inset-focus: rgb(134, 134, 133) 0 0 0 1px inset;
+
+  --ds-radius-input: 10px;
+  --ds-radius-card-sm: 16px;
+  --ds-radius-card-lg: 30px;
+  --ds-radius-section: 40px;
+  --ds-radius-pill: 9999px;
+
+  --ds-font-size-caption: 0.875rem;
+  --ds-font-size-body: 1.125rem;
+  --ds-font-size-feature: 1.375rem;
+  --ds-font-size-display-hero: 7.88rem;
+  --ds-font-size-button-sm: 0.875rem;
+  --ds-font-size-button-md: 1.125rem;
+  --ds-font-size-button-lg: 1.375rem;
+  --ds-line-height-display: 0.85;
+  --ds-line-height-tight: 1.25;
+
+  --ds-space-1: 0.25rem;
+  --ds-space-2: 0.5rem;
+  --ds-space-3: 0.75rem;
+  --ds-space-4: 1rem;
+  --ds-space-6: 1.5rem;
+
+  --ds-control-h-sm: 2.25rem;
+  --ds-control-h-md: 2.75rem;
+  --ds-control-h-lg: 3rem;
+  --ds-story-width-sm: 20rem;
+  --ds-story-width-md: 21.25rem;
+  --ds-story-width-lg: 23.75rem;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ds-color-text-primary: #f3f6ef;
+  --ds-color-text-secondary: #d2d8c9;
+  --ds-color-text-muted: #adb7a0;
+  --ds-color-surface: #0f120d;
+  --ds-color-surface-soft: #151a12;
+  --ds-color-accent-primary: #9fe870;
+  --ds-color-accent-primary-foreground: #163300;
+  --ds-color-accent-soft: rgba(159, 232, 112, 0.16);
+  --ds-color-accent-hover: rgba(159, 232, 112, 0.24);
+  --ds-color-danger: #ff6a6a;
+  --ds-color-warning: #ffd11a;
+  --ds-color-positive: #78cf9d;
+  --ds-color-orange: #ffc091;
+  --ds-color-border-default: rgba(243, 246, 239, 0.18);
+
+  --ds-shadow-ring: rgba(243, 246, 239, 0.14) 0 0 0 1px;
+  --ds-shadow-inset-focus: rgba(243, 246, 239, 0.25) 0 0 0 1px inset;
+}
+
+* {
+  font-feature-settings: "calt" 1;
+}
+
+body {
+  background: var(--ds-color-surface);
+  color: var(--ds-color-text-primary);
+  font-family: Inter, Helvetica, Arial, sans-serif;
+}
