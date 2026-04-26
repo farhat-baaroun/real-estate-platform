@@ -24,7 +24,7 @@ export const FallbackOnly: Story = {
 export const ImageAvatar: Story = {
   render: () => (
     <Avatar>
-      <AvatarImage src="https://i.pravatar.cc/100?img=7" alt="Profile" />
+      <AvatarImage src="/storybook-assets/avatar-7.svg" alt="Profile" />
       <AvatarFallback>WB</AvatarFallback>
     </Avatar>
   )

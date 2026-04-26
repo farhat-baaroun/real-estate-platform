@@ -22,7 +22,9 @@ export const PropertyCard: Story = {
         <CardDescription>2 bed, 2 bath, 114 sqm</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-zinc-600">Listed at $295,000. Available for immediate viewing.</p>
+        <p className="text-[var(--ds-font-size-caption)] text-[var(--ds-color-text-muted)]">
+          Listed at $295,000. Available for immediate viewing.
+        </p>
       </CardContent>
       <CardFooter>
         <Button size="sm">Contact Agent</Button>

@@ -45,3 +45,17 @@ export const Large: Story = {
     children: 'Large CTA'
   }
 };
+
+export const Small: Story = {
+  args: {
+    size: 'sm',
+    children: 'Small CTA'
+  }
+};
+
+export const Disabled: Story = {
+  args: {
+    disabled: true,
+    children: 'Disabled'
+  }
+};

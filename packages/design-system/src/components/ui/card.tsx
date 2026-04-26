@@ -25,9 +25,13 @@ export function CardHeader({ className, ...props }: React.ComponentProps<'div'>)
   );
 }
 
-export function CardTitle({ className, ...props }: React.ComponentProps<'h3'>) {
+type CardTitleProps = React.ComponentPropsWithoutRef<'h3'> & {
+  as?: React.ElementType;
+};
+
+export function CardTitle({ as: Component = 'h3', className, ...props }: CardTitleProps) {
   return (
-    <h3
+    <Component
       data-slot="card-title"
       className={cn(
         'text-[var(--ds-font-size-feature)] font-semibold leading-[var(--ds-line-height-tight)] tracking-normal',

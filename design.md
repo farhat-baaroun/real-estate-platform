@@ -102,7 +102,14 @@ What distinguishes Wise is its green-on-white-on-black material palette. Lime Gr
 
 ### Spacing System
 - Base unit: 8px
-- Scale: 1px, 2px, 3px, 4px, 5px, 8px, 10px, 11px, 12px, 16px, 18px, 19px, 20px, 22px, 24px
+- Sub-step: 4px (used for compact controls and tight layouts)
+- Canonical scale (source of truth is `packages/design-system/src/styles/globals.css`):
+  - `--ds-space-1` = 4px
+  - `--ds-space-2` = 8px
+  - `--ds-space-3` = 12px
+  - `--ds-space-4` = 16px
+  - `--ds-space-6` = 24px
+- Off-grid exceptions must be explicit and justified in component docs; default to these tokens.
 
 ### Border Radius Scale
 - Minimal (2px): Links, inputs
@@ -145,12 +152,14 @@ What distinguishes Wise is its green-on-white-on-black material palette. Lime Gr
 ## 8. Responsive Behavior
 
 ### Breakpoints
+
 | Name | Width | Key Changes |
 |------|-------|-------------|
 | Mobile | <576px | Single column |
 | Tablet | 576–992px | 2-column |
 | Desktop | 992–1440px | Full layout |
 | Large | >1440px | Expanded |
+
 
 ## 9. Agent Prompt Guide
 

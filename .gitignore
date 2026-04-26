@@ -152,6 +152,4 @@ vite.config.ts.timestamp-*
 
 # Storybook outputs and caches
 storybook-static/
-**/storybook-static/
 .storybook-cache/
-**/.storybook-cache/

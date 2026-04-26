@@ -27,9 +27,13 @@ function Alert({
   return <div role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
 }
 
-function AlertTitle({ className, ...props }: React.ComponentProps<'h5'>) {
+type AlertTitleProps = React.ComponentPropsWithoutRef<'h5'> & {
+  as?: React.ElementType;
+};
+
+function AlertTitle({ as: Component = 'h5', className, ...props }: AlertTitleProps) {
   return (
-    <h5
+    <Component
       className={cn(
         'mb-[var(--ds-space-1)] font-semibold leading-[var(--ds-line-height-tight)] text-[var(--ds-font-size-caption)]',
         className

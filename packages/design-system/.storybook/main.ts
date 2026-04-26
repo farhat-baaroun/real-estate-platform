@@ -6,13 +6,14 @@ const config: StorybookConfig = {
   "stories": [
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
+  "staticDirs": ["./public"],
   "addons": ["@storybook/addon-docs", "@storybook/addon-mcp"],
   "framework": {
     "name": "@storybook/react-vite",
     "options": {}
   },
-  viteFinal: async (config) =>
-    mergeConfig(config, {
+  viteFinal: async (viteConfig) =>
+    mergeConfig(viteConfig, {
       plugins: [tailwindcss()]
     })
 };

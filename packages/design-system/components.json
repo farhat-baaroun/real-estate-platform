@@ -11,10 +11,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@real-estate/design-system/components",
-    "hooks": "@real-estate/design-system/hooks",
-    "lib": "@real-estate/design-system/lib",
-    "utils": "@real-estate/design-system/lib/utils",
-    "ui": "@real-estate/design-system/components/ui"
+    "components": "@/components",
+    "hooks": "@/hooks",
+    "lib": "@/lib",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui"
   }
 }

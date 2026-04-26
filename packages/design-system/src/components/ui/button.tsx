@@ -5,18 +5,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-[var(--ds-space-2)] whitespace-nowrap rounded-[var(--ds-radius-pill)] text-[var(--ds-font-size-button-sm)] font-semibold transition-transform duration-150 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-color-accent-primary)] focus-visible:ring-offset-2',
+  'inline-flex items-center justify-center gap-[var(--ds-space-2)] whitespace-nowrap rounded-[var(--ds-radius-pill)] text-[var(--ds-font-size-button-sm)] font-semibold motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:scale-105 motion-safe:active:scale-95 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ds-color-accent-primary)] focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--ds-color-accent-primary)] text-[var(--ds-color-accent-primary-foreground)] hover:scale-105 active:scale-95',
+          'bg-[var(--ds-color-accent-primary)] text-[var(--ds-color-accent-primary-foreground)]',
         secondary:
-          'bg-[var(--ds-color-accent-soft)] text-[var(--ds-color-text-primary)] hover:scale-105 active:scale-95',
+          'bg-[var(--ds-color-accent-soft)] text-[var(--ds-color-text-primary)]',
         outline:
-          'border border-[var(--ds-color-border-default)] bg-transparent text-[var(--ds-color-text-primary)] hover:scale-105 active:scale-95',
-        ghost:
-          'text-[var(--ds-color-text-primary)] hover:bg-[var(--ds-color-accent-soft)] hover:scale-105 active:scale-95'
+          'border border-[var(--ds-color-border-default)] bg-transparent text-[var(--ds-color-text-primary)]',
+        ghost: 'text-[var(--ds-color-text-primary)] hover:bg-[var(--ds-color-accent-soft)]'
       },
       size: {
         default:

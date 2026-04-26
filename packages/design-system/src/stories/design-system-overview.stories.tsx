@@ -109,7 +109,9 @@ export const WiseInspiredFoundation: Story = {
         <Section index="02 / Typography" title="Typography Scale">
           <Card className="rounded-[var(--ds-radius-card-sm)]">
             <CardContent className="space-y-[var(--ds-space-3)] pt-[var(--ds-space-6)]">
-              <p className="text-[7.88rem] font-black leading-[var(--ds-line-height-display)]">DISPLAY HERO</p>
+              <p className="text-[var(--ds-font-size-display-hero)] font-black leading-[var(--ds-line-height-display)]">
+                DISPLAY HERO
+              </p>
               <p className="text-[var(--ds-font-size-caption)] text-[var(--ds-color-text-muted)]">
                 Display - 126px / 900 / 0.85 / Wise Sans / &quot;calt&quot;
               </p>
@@ -166,7 +168,18 @@ export const WiseInspiredFoundation: Story = {
             <CardContent className="grid gap-[var(--ds-space-4)] pt-[var(--ds-space-6)] md:grid-cols-2">
               <Input defaultValue="1,000.00 GBP" aria-label="Amount" />
               <Input defaultValue="John Smith" aria-label="Recipient" />
-              <Input defaultValue="invalid" aria-label="IBAN" className="border-[var(--ds-color-danger)] text-[var(--ds-color-danger)]" />
+              <div className="space-y-[var(--ds-space-1)]">
+                <Input
+                  defaultValue="invalid"
+                  aria-label="IBAN"
+                  aria-invalid="true"
+                  aria-describedby="iban-error"
+                  className="border-[var(--ds-color-danger)] text-[var(--ds-color-danger)]"
+                />
+                <p id="iban-error" className="text-[var(--ds-font-size-caption)] text-[var(--ds-color-danger)]">
+                  Invalid IBAN format.
+                </p>
+              </div>
               <Input placeholder="Payment reference..." aria-label="Reference" />
             </CardContent>
           </Card>
