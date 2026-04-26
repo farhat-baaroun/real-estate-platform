@@ -42,14 +42,14 @@ importers:
   apps/backend:
     dependencies:
       fastify:
-        specifier: latest
+        specifier: ^5.0.0
         version: 5.8.5
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^25.0.0
         version: 25.6.0
       tsx:
-        specifier: latest
+        specifier: ^4.0.0
         version: 4.21.0
       typescript:
         specifier: ^5.5.0
@@ -58,43 +58,43 @@ importers:
   apps/web:
     dependencies:
       '@tanstack/react-start':
-        specifier: latest
+        specifier: ^1.0.0
         version: 1.167.49(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0))
       react:
-        specifier: latest
+        specifier: ^19.0.0
         version: 19.2.5
       react-dom:
-        specifier: latest
+        specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
     devDependencies:
       '@types/react':
-        specifier: latest
+        specifier: ^19.0.0
         version: 19.2.14
       '@types/react-dom':
-        specifier: latest
+        specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.14)
       '@vitejs/plugin-react':
-        specifier: latest
+        specifier: ^6.0.0
         version: 6.0.1(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0))
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
       vite:
-        specifier: latest
+        specifier: ^8.0.0
         version: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)
 
   packages/design-system:
     dependencies:
       '@radix-ui/react-slot':
-        specifier: latest
+        specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.14)(react@19.2.5)
-      react:
-        specifier: latest
-        version: 19.2.5
     devDependencies:
       '@types/react':
-        specifier: latest
+        specifier: ^19.0.0
         version: 19.2.14
+      react:
+        specifier: ^19.0.0
+        version: 19.2.5
       typescript:
         specifier: ^5.5.0
         version: 5.9.3

@@ -1,63 +1,82 @@
-Real‑Estate Platform – Minimal MVP → Full DevOps
+0. Master Architectural Principles
+Clean Architecture – packages/domain contains ALL business logic; frameworks live in infrastructure.
 
-Based on your refined requirements, I’ve restructured the project into phased chunks, each with a clear goal and verification checkpoint. The plan now respects:
+Contract‑First, Backend‑Owned – A single OpenAPI 3.1 YAML file is the source of truth for every endpoint, DTO, and validation rule.
 
-Backend as the single contract source (OpenAPI YAML) that can generate both a read‑only BFF and direct API clients.
-
-BFF is optional & removable – the frontend can call the backend directly via generated TypeScript clients.
-
-Domain package enforced as the sole location of business rules.
-
-
-AI context served via MCP documentation servers for live accuracy.
-
-Testing after each integration before moving on.
-
-Free DevOps pipeline from day one.
-
-0. Master Architectural Principles (Unchanged & Strengthened)
-Clean Architecture – Domain layer (packages/domain) contains ALL business logic; frameworks live in infrastructure.
-
-Contract‑First, Backend‑Owned – A single OpenAPI 3.1 YAML file defines every endpoint, DTO, and validation. This file is the source of truth.
-
-Temporal API – All date handling in domain must use Temporal, never Date.
+Temporal API – All date handling in the domain layer must use Temporal, never Date.
 
 Optimistic UI – Every mutation uses optimistic updates; all lists paginated.
 
-Testing Pyramid – BDD → Unit (domain) → Integration (API) → E2E (smoke).
+Testing Pyramid – BDD scenarios → Domain unit tests → API integration tests → E2E smoke tests.
 
-AI Governance – Rules enforced by linters + MCP servers, not just prompt context.
+AI Governance – Rules enforced by linters + live MCP documentation servers, not just static prompt files.
 
-STAGE 0: Foundation (Goal: Bootable Monorepo + Tooling)
-Activities (done once):
+STAGE 0: Foundation – Monorepo, Toolchain & Design System
+0.1 Monorepo Scaffolding
+Activities:
 
-pnpm monorepo with minimal initial packages:
+pnpm workspace with initial packages:
 
-apps/web (React 19 + TanStack)
+apps/web (React 19 + TanStack Start)
 
 apps/backend (Fastify)
 
 packages/domain (pure TS)
 
-packages/types (shared DTOs – eventually generated from API contract)
+packages/types (will be generated from contract)
 
-packages/design-system (shadcn/ui)
+packages/design-system (shadcn/ui + Storybook)
 
-Shared tsconfig, eslint, prettier configurations.
+Shared tsconfig, eslint, prettier, .gitignore.
 
-Set up CI/CD skeleton on GitHub Actions – lint, typecheck, test on every push.
+CI skeleton on GitHub Actions (lint, typecheck, test).
 
-Verification:
+Verification gate:
 
-pnpm lint && pnpm typecheck passes in all packages.
+pnpm lint && pnpm typecheck passes everywhere.
 
-Empty “Hello World” endpoints on web (React) and backend (Fastify) that talk via fetch, confirming monorepo plumbing works.
+Web renders “Hello from Web”, backend serves /health → {"status":"ok"}.
 
-STAGE 1: Domain Modeling & BDD (Goal: Pure Business Rules, No Frameworks)
+0.2 Design System & shadcn/ui v4 + Storybook
+Goal: A fully working component library with visual testing and documentation.
+
+Steps:
+
+In packages/design-system, run npx shadcn@latest init (choose Tailwind, CSS variables, etc.) to add shadcn/ui v4.
+
+Add the base component set via CLI: npx shadcn@latest add button skeleton card input (at minimum).
+
+Customize Button to support primary | secondary | danger variants and loading state (using Radix Slot).
+
+Set up Storybook 8+ with npx storybook@latest init in the same package, configured for React + Vite + Tailwind.
+
+Create stories for every shadcn component with visual tests (snapshot or Chromatic later).
+
+Create a comprehensive design.md file in the repository root (docs/design.md or tools/ai/design.md) containing:
+
+UI principles: minimal, data‑first, clean.
+
+Component rules: loading states → skeletons, errors → user‑friendly messages, pagination everywhere.
+
+Optimistic updates for all mutations.
+
+Accessibility: all inputs labeled, keyboard navigation.
+
+Do NOT put business logic in components.
+
+Verification gate (before Stage 1):
+
+Storybook starts and shows all custom components correctly.
+
+Playwright or Storybook test‑runner checks that the Button renders states without error.
+
+design.md exists and is up‑to‑date.
+
+STAGE 1: Domain Modeling & BDD (Pure Business Rules)
 Chunk 1.1 – BDD Scenarios
-Write coarse‑grained Gherkin features for the core MVP: Property Listing.
+Gherkin features for the core MVP: Property Listing.
 
-text
+gherkin
 Feature: Publish a property listing
   Scenario: Owner publishes a listing with price
     Given an authenticated owner
@@ -69,234 +88,159 @@ Feature: Publish a property listing
     When they attempt to publish
     Then the system rejects with "Price is required"
 Chunk 1.2 – Domain Implementation
-Extract from the scenarios: entities, value objects, aggregates, domain rules.
-Implement in packages/domain:
 
 PropertyListing aggregate
 
-Price value object (Temporal.Instant for creation timestamps)
+Price value object (using Temporal.Instant for creation timestamps)
 
-Publish method containing business validation (price mandatory, etc.)
+publish() method containing all business validations (price mandatory, etc.)
 
-Verification (before any backend code):
+Verification (gate):
 
-Unit tests for domain logic pass:
+Domain unit tests pass.
 
-createValidListing succeeds
+ESLint rule no-date-import blocks Date inside packages/domain.
 
-publishWithoutPrice throws PriceRequiredError
-
-updatePrice correctly returns new instance (immutable)
-
-Lint rule: importing Date inside packages/domain is blocked by a custom ESLint rule.
-
-STAGE 2: Backend – Contract First with Unified YAML (Goal: Deployable Backend with Contract Validation)
-Chunk 2.1 – Canonical OpenAPI YAML
-Create specs/openapi.yaml that describes the backend REST API for Property Listings.
+STAGE 2: Backend – Contract‑First with OpenAPI, Auth & Reusable Pagination
+2.1 Canonical OpenAPI YAML
+Create specs/openapi.yaml with shared pagination, filtering, and limit components that are reused on every list endpoint.
 
 yaml
-openapi: 3.1.0
-info:
-  title: Real Estate API
-  version: 1.0.0
-paths:
-  /listings:
-    get:
-      operationId: getListings
-      summary: Get paginated listings
-      parameters: [ ... ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListingPage'
-    post:
-      operationId: createListing
-      ...
-Include all schemas (DTOs) and validation rules (via JSON Schema).
+components:
+  parameters:
+    Page:   { in: query, name: page,  schema: { type: integer, minimum: 1, default: 1 } }
+    Limit:  { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    Sort:   { in: query, name: sort,  schema: { type: string, enum: [createdAt_asc, createdAt_desc, price_asc, price_desc] } }
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:   { type: integer }
+        pageCount:    { type: integer }
+        currentPage:  { type: integer }
+        perPage:      { type: integer }
+    ListingFilter:
+      type: object
+      properties:
+        minPrice:  { type: number }
+        maxPrice:  { type: number }
+        bedrooms:  { type: integer }
+        status:    { type: string, enum: [draft, published, archived] }
+    ListingPage:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Listing' } }
+        meta: { $ref: '#/components/schemas/PaginationMeta' }
+2.2 Code Generation
+Generate packages/types, backend route stubs, and Zod validation from the YAML.
 
-Chunk 2.2 – Generate Code from YAML
-Use @openapi-generator/cli (or quicktype) to generate:
+2.3 Initial Backend Implementation
+Fastify, use‑cases, Prisma repository, no business logic outside domain.
 
-packages/types – TypeScript interfaces for all DTOs.
+2.4 SuperTokens Auth
+Add auth endpoints, extend YAML with securitySchemes, re‑generate client, write auth integration tests.
 
-apps/backend – Fastify route stubs with inline request/response validation (using openapi-glue or manual generation).
+Verification gate:
 
-Validation integration: Zod schemas automatically derived from JSON Schema (using json-schema-to-zod). This guarantees backend validation matches the contract.
+All integration tests pass (CRUD + auth).
 
-Chunk 2.3 – Backend Implementation
+Spectral lint confirms shared pagination components are used, no duplicate definitions.
 
-Fastify server with generated routes.
+STAGE 3: Frontend MVP – Direct REST API, No BFF, Using Design System
+3.1 Generate Typed API Client (from YAML)
+The client automatically exposes a single paginated query interface for all list endpoints.
 
-Use‑cases (application layer) that call packages/domain.
+3.2 Build UI with Design System and Design Rules
+Use packages/design-system components (Button, Skeleton, Card) – they already exist and are tested.
 
-Prisma repository only in infrastructure layer; transactions used for publish.
+TanStack Start routes for listings, create, publish.
 
-No business logic outside domain. Dates serialised as ISO 8601 strings.
+Every list view must use the same pagination controls (page, limit, sort) as generated by the contract.
 
-Verification (integration tests, not yet full E2E):
+Loading states → <Skeleton> from design system.
 
-Start backend + PostgreSQL (local via Docker).
+Mutations → optimistic updates using TanStack Query.
 
-GET /listings returns 200 with empty array.
+Error messages shown via inline alerts/Toast (not custom logic).
 
-POST /listings with valid data persists to DB and returns 201.
+SuperTokens React SDK wraps the app.
 
-publish endpoint rejects missing price with 422 and a clear error message, matching domain rule.
+No domain logic leaks into components – only API‑returned data and design‑system components.
 
-Test matrix includes both happy and error paths derived from BDD.
+3.3 Visual and Interaction Testing
+Storybook stories for new composite components (e.g., ListingCard, PaginatedList).
 
-Run Spectral linter on the OpenAPI YAML to enforce style rules and consistency.
+Visual regression tests (Percy / Chromatic) against Storybook to ensure design.md compliance.
 
-STAGE 3: Frontend MVP (Direct API, No BFF) (Goal: Functional UI with End‑to‑End Traceability)
-Chunk 3.1 – Generate TypeScript API Client
-From the same specs/openapi.yaml, generate a typed fetch client using openapi-typescript-codegen or @hey-api/openapi-ts. This client lives in packages/api-client.
+Playwright E2E: full publish flow, also test that skeletons appear during loading, and that optimistic toggles work.
 
-Chunk 3.2 – Build UI for MVP
+Verification (gate):
 
-TanStack Start page for Property Listings.
+E2E passes.
 
-TanStack Query hooks using the generated client (no manual fetch, full typing).
+Design‑system components are the only building blocks used (can be enforced by an ESLint rule banning raw HTML inputs except in design‑system).
 
-Optimistic UI for publish: button updates immediately, rollback on error.
+No new Date() anywhere in web.
 
-Skeletons, error states, pagination all handled.
+Pagination works identically across different pages.
 
-Verification (E2E smoke test):
+STAGE 4: Optional Read‑Only BFF (GraphQL Middleware)
+Generate a GraphQL schema from the same OpenAPI YAML (auto‑excludes mutations).
 
-Start backend + frontend.
+apps/bff (GraphQL Yoga) serves it; zero custom logic.
 
-Playwright test (or Cypress) that mimics the BDD “publish listing with price” scenario, confirming the UI flows from creation to published state.
-
-Crucially, verify that no business logic leaked into the frontend: publish button calls the API, and the API response determines success/failure, not client‑side price checks.
-
-STAGE 4: Optional Read‑Only BFF (Goal: GraphQL Middleware Layer That Can Be Removed Without Breaking Anything)
-Now we introduce the BFF as an add‑on, not a dependency.
-
-Chunk 4.1 – Generate GraphQL Schema from OpenAPI
-Use @graphql-mesh/openapi or openapi-to-graphql to dynamically create a read‑only GraphQL schema from the running backend. This is a thin layer with no mutations; it only maps REST endpoints to queries.
-
-Alternative approach for static generation:
-If you want a static schema, use a tool like swagger-to-graphql (build time) to produce a GraphQL SDL file that can be served. The schema remains in sync because it’s derived from the YAML.
-
-Chunk 4.2 – Stand‑Alone BFF Server
-
-A separate apps/bff (GraphQL Yoga) that imports the generated schema (from the contract) and forwards queries to the backend.
-
-No custom resolvers containing logic; pure pass‑through with optional field selection optimisation.
-
-The BFF server is deployed independently and can be turned off at any time.
-
-Chunk 4.3 – Feature‑Flaged Frontend Integration
-
-TanStack Query can be configured to use either the direct REST client or the GraphQL endpoint based on an environment variable.
-
-The REST client (from OpenAPI) remains the default; GraphQL is an experiment.
+Feature flag (USE_BFF) toggles between REST and GraphQL.
 
 Verification:
 
-With USE_BFF=graphql, the frontend queries listings via GraphQL and displays same data as REST.
+Identical data, pagination, and filters with REST vs GraphQL.
 
-Switch back to USE_BFF=rest and all functionality works – proving the BFF is truly optional.
+Turning off BFF has no effect on frontend.
 
-Performance test: compare response times and payload sizes; this data will decide if the BFF stays permanently or is dropped.
+STAGE 5: AI Governance & Architectural Enforcement
+5.1 MCP Documentation Server with design.md
+Expose live resources:
 
-STAGE 5: AI Governance & Linter Fortification (Goal: Automatically Enforce Architecture Rules)
-5.1 MCP Documentation Server
-Set up a Model Context Protocol (MCP) server that exposes your architecture rules, API contract, and domain knowledge to Cursor. Instead of static skills.md, AI agents can query live documentation.
+GET /contract → OpenAPI YAML.
 
-Implementation:
+GET /rules/architecture → current lint rules.
 
-Use @modelcontextprotocol/server with resources:
+GET /rules/design → the design.md contents.
 
-GET /contract → returns the latest OpenAPI YAML (fetched from repo).
+GET /rules/testing → BDD‑to‑test mapping.
 
-GET /rules/architecture → returns the lint rules (e.g., “no Date”, “no business logic in web”).
+5.2 Linter Rules
+Spectral: enforce reusable pagination components, no duplicate filter definitions.
 
-GET /rules/testing → BDD‑to‑test mapping guidelines.
-
-This ensures the AI always follows the current contract, not a stale copy.
-
-5.2 Linter Strategy for YAML Contract
-
-spectral for OpenAPI linting with custom rulesets (e.g., enforce operationId naming, forbid mutations in paths that will become GraphQL queries if BFF is active).
-
-@openapi‑lint‑config to keep error formats consistent.
-
-CI: Run spectral lint specs/openapi.yaml on every pull request; merge blocked if violations.
-
-5.3 Custom ESLint Rules
-
-no-date-import – bans Date in packages/domain and ensures Temporal is used.
-
-no-domain-in-web – apps/web cannot import from packages/domain.
-
-no-direct-prisma-in-routes – backend infrastructure only.
+ESLint: no-date-import (domain), no-domain-in-web, no-direct-prisma, and only-design-system-components in web.
 
 Verification:
 
-MCP server returns correct contract on query.
+MCP server returns design.md; AI never suggests raw <button> when <Button> exists.
 
-Lint commit hook catches violations; CI fails appropriately.
+STAGE 6: DevOps & Deployment (Free Tier)
+GitHub Actions → lint, typecheck, test (unit + integration + e2e), and visual tests (Chromatic).
 
-AI in Cursor can query MCP to get current schema and rules, reducing manual context‑switching.
+Deploy previews with Vercel (frontend + Storybook) and Render (backend).
 
-STAGE 6: DevOps & Deployment (Goal: Production‑Ready, Free Tier)
-6.1 CI/CD Pipeline (GitHub Actions)
-
-Lint & Test job on every push.
-
-Deploy preview for branches.
-
-E2E tests run against staging deployment before merge to main.
-
-6.2 Infrastructure Choices (Free Tier)
-
-Component	Service	Free Tier Limits
-Frontend	Vercel	100 GB bandwidth, 6,000 build‑minutes/mo
-Backend (API)	Render	750 hours runtime, 100 GB bandwidth
-BFF (optional)	Render	same
-PostgreSQL	Supabase	2 projects, 500 MB database, shared CPU
-Monitoring	Sentry (free)	5K errors/month, performance monitoring
-CI/CD	GitHub Actions	2,000 minutes/month (private repos)
-6.3 Deployment Automation
-
-Push to main triggers production deploy to Vercel (frontend) and Render (backend/BFF).
-
-Database migrations run automatically as part of backend deploy (Prisma migrate deploy).
+Free tier stack: Vercel, Render, Supabase, self‑hosted SuperTokens, Sentry.
 
 Verification:
 
-Full pipeline from commit to production with zero manual steps.
+One‑click deploy to production.
 
-E2E test run against production‑like environment passes.
+Storybook is publicly available (e.g., vercel preview URL) for design review.
 
-Rollback can be done via Render CLI if needed.
+Monitoring catches runtime errors.
 
-7. tRPC vs GraphQL as Optional BFF – Comparison
-Criteria	tRPC BFF	GraphQL BFF (generated from OpenAPI)
-Contract Source	Code‑first: BFF router definitions become the contract. Must manually mirror backend endpoints.	Generated schema from OpenAPI YAML; stays in sync with backend automatically.
-Optionality	If BFF removed, frontend loses typed client (unless you also generate from OpenAPI).	Frontend can fall back to REST client from same OpenAPI spec without change.
-Type Safety	Excellent (end‑to‑end types shared) but only if both frontend and BFF use the same procedures.	Good via codegen from schema; typing is per‑operation but still robust.
-Developer Experience	Very simple API (no AST parsing); just call bff.listings.all().	Slightly more complex (graphql‑request) but tools like graphql‑codegen generate hooks.
-Performance	Very fast; no query parsing overhead.	Has parsing cost; can suffer from N+1 if not careful (but read‑only BFF can batch calls).
-Flexibility	Limited to the procedures defined. No field selection; always returns full DTO.	Clients can request only needed fields, reducing payload size.
-Tooling & Ecosystem	Mature for Next.js; TanStack Query integrates well.	GraphQL ecosystem huge, but adds operational complexity (schemas, stitching).
-Maintainability	BFF must be manually updated when backend changes (breakages caught by TypeScript).	Schema generation ensures drift is caught at CI. BFF almost maintenance‑free.
-Recommendation:
-Given your hard requirement that the BFF be optional and derived from a single YAML contract, GraphQL (auto‑generated) is the clear winner. tRPC would require duplicating the contract logic, breaking the “single source of truth” principle. The GraphQL layer can be generated with zero manual coding and can be turned off without any client‑side code changes (the same REST client works). Start with direct REST calls; add the GraphQL BFF later if you need field selection or query aggregation, knowing it’s purely a read‑side optimisation.
+Why shadcn/ui v4 + Storybook + design.md matter here
+shadcn/ui v4 gives you accessible, customizable components out‑of‑the‑box via its CLI, preserving your ability to adapt design tokens later.
 
-8. Final Workflow: Chunks with Verification Gates
-Stage	Goal	Verification (Gate)
-0	Monorepo + toolchain	Lint & typecheck pass
-1	Domain model & BDD scenarios	Unit tests for domain logic pass; no Date in domain
-2	Backend with OpenAPI contract	Integration tests pass; Spectral lint passes; domain not re‑implemented in routes
-3	Frontend MVP (direct API)	E2E smoke test (publish flow) works; no business logic in frontend
-4	Optional BFF layer	Feature‑flag test: switch between REST/GraphQL; identical results; BFF removable
-5	AI governance (MCP + linters)	MCP server serves current contract; linters block architectural violations in CI
-6	Full DevOps pipeline	One‑click deploy to production; E2E on staging; monitoring live
-Each chunk cannot proceed until its verification passes, ensuring a solid foundation.
+Storybook not only develops components in isolation but acts as your visual testing environment, ensuring the design system rules (loading, errors, a11y) are visibly enforced before they reach the app.
 
-9. One‑Sentence Summary
-We build the system in tiny, verified slices, with the domain as the absolute truth, a single OpenAPI YAML that generates both the backend and an utterly optional, read‑only GraphQL layer, while AI rules are served live via MCP and enforced by linters – all deployed for free until revenue justifies scaling.
+design.md is the single living document that both developers and AI refer to. By serving it through MCP, you guarantee the AI never suggests a component that violates the UI principles (e.g., raw alerts instead of the design‑system Toast).
+
+The combination ensures that from day one, every screen is built from pre‑tested, documented, and contract‑aligned building blocks—catching visual regressions, accessibility flaws, and design violations automatically.
+
+One‑sentence summary:
+*We build a production‑ready real‑estate platform in strictly verified slices, with the domain as the single source of truth, an OpenAPI contract that drives a secured backend, an optional read‑only GraphQL layer, a universal pagination and filtering scheme, and a fully tested design system (shadcn/ui v4 + Storybook) governed by a living design.md and AI‑served rules—all deployed on free infrastructure until revenue demands scaling.*

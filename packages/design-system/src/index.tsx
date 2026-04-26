@@ -5,7 +5,8 @@ export type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
   asChild?: boolean;
 };
 
-export function Button({ asChild, ...props }: ButtonProps) {
+export function Button({ asChild, children, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
-  return <Comp {...props}>Slot</Comp>;
+  const content = asChild ? React.Children.only(children) : children;
+  return <Comp {...props}>{content}</Comp>;
 }

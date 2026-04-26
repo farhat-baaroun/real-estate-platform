@@ -13,11 +13,14 @@
     "test": "echo 'no tests yet' && exit 0"
   },
   "dependencies": {
-    "@radix-ui/react-slot": "latest",
-    "react": "latest"
+    "@radix-ui/react-slot": "^1.2.4"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "latest",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
     "typescript": "^5.5.0"
   }
 }
