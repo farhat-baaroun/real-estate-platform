@@ -72,4 +72,27 @@ module.exports = [
       },
     },
   },
+  {
+    files: ['packages/domain/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'date-fns',
+              message: 'Use Temporal instead.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['**/Date'],
+              message: 'Use Temporal.Instant or Temporal.PlainDate instead.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': ['error', 'Date'],
+    },
+  },
 ];
