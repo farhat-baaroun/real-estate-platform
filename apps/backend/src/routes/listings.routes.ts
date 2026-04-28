@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import type { Listing as ListingModel } from '@prisma/client';
 
 import { requireAuth } from '../auth/require-auth';
 import { ListingRepository } from '../infrastructure/repositories/listing.repository';
@@ -23,7 +24,7 @@ export async function registerListingRoutes(app: FastifyInstance): Promise<void>
     });
 
     return {
-      data: result.data.map((row) => ({
+      data: result.data.map((row: ListingModel) => ({
         ...row,
         createdAt: row.createdAt.toISOString(),
       })),

@@ -7,7 +7,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
-    "typecheck": "pnpm --filter @real-estate/domain build && tsc --noEmit -p tsconfig.json",
+    "typecheck": "prisma generate && pnpm --filter @real-estate/domain build && tsc --noEmit -p tsconfig.json",
     "test": "pnpm --filter @real-estate/domain build && prisma db push && vitest run --config vitest.config.ts"
   },
   "dependencies": {
