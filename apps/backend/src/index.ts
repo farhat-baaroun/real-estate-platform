@@ -1,6 +1,6 @@
-import Fastify from 'fastify';
+import { buildServer } from './server';
 
-const server = Fastify();
+const server = buildServer();
 
 const resolvePort = (): number => {
   const rawPort = process.env.PORT;
@@ -20,8 +20,6 @@ const resolvePort = (): number => {
 };
 
 const port = resolvePort();
-
-server.get('/health', async () => ({ status: 'ok' }));
 
 const start = async () => {
   try {

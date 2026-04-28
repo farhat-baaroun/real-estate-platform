@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.6.0",
+    "generators": {
+      "types": {
+        "generatorName": "typescript-axios",
+        "output": "packages/types/src/generated",
+        "glob": "specs/openapi.yaml",
+        "additionalProperties": {
+          "withSeparateModelsAndApi": true,
+          "apiPackage": "api",
+          "modelPackage": "models"
+        }
+      },
+      "fastify-routes": {
+        "generatorName": "typescript-fetch",
+        "output": "apps/backend/src/generated",
+        "glob": "specs/openapi.yaml",
+        "additionalProperties": {
+          "supportsES6": true,
+          "typescriptThreePlus": true,
+          "prefixParameterInterfaces": true
+        }
+      }
+    }
+  }
+}
