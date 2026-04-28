@@ -7,7 +7,7 @@ Feature: Property Listing Management
       Then the listing status becomes "PUBLISHED"
 
     Scenario: Owner cannot publish a listing without a price
-      Given a listing with a price of 0
+      Given a listing without a price
       When the owner tries to publish the listing
       Then the publication is rejected with "Price is required"
 

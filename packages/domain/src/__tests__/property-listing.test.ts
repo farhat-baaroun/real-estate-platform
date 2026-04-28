@@ -23,6 +23,8 @@ describe('PropertyListing', () => {
   });
 
   it('rejects publishing a listing without a price', () => {
+    // Intentionally bypass Price constructor validation in makeDraftListing by casting `{ value: 0 } as Price`,
+    // so publish() exercises the aggregate boundary guard and throws InvalidStateError('Price is required').
     const listing = makeDraftListing({ value: 0 } as Price);
 
     expect(() => listing.publish()).toThrowError(new InvalidStateError('Price is required'));
@@ -51,7 +53,7 @@ describe('PropertyListing', () => {
     const listing = makeDraftListing().publish();
 
     expect(() => listing.updateDetails({ bedrooms: 3 })).toThrowError(
-      new InvalidStateError('Cannot update a published listing')
+      new InvalidStateError('Cannot modify listing when status is PUBLISHED')
     );
   });
 
@@ -59,7 +61,7 @@ describe('PropertyListing', () => {
     const listing = makeDraftListing().publish();
 
     expect(() => listing.changePrice(new Price(120_000))).toThrowError(
-      new InvalidStateError('Cannot update a published listing')
+      new InvalidStateError('Cannot modify listing when status is PUBLISHED')
     );
   });
 

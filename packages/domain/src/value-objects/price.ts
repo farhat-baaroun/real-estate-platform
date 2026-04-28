@@ -4,7 +4,7 @@ export class Price {
   readonly #value: number;
 
   constructor(value: number) {
-    if (value <= 0) {
+    if (!Number.isFinite(value) || value <= 0) {
       throw new InvalidPriceError('Price must be greater than 0');
     }
     this.#value = value;

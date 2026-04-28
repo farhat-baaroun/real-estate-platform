@@ -52,7 +52,7 @@ export class PropertyListing {
 
   updateDetails(details: PropertyListingDetails): PropertyListing {
     if (this.status !== ListingStatus.DRAFT) {
-      throw new InvalidStateError('Cannot update a published listing');
+      throw new InvalidStateError(`Cannot modify listing when status is ${this.status.value}`);
     }
 
     return this.clone({
@@ -63,7 +63,7 @@ export class PropertyListing {
 
   changePrice(newPrice: Price): PropertyListing {
     if (this.status !== ListingStatus.DRAFT) {
-      throw new InvalidStateError('Cannot update a published listing');
+      throw new InvalidStateError(`Cannot modify listing when status is ${this.status.value}`);
     }
 
     return this.clone({ price: newPrice });
