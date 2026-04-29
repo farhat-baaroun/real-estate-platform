@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildServer } from '../server';
@@ -7,10 +8,13 @@ const app = buildServer();
 
 async function signUpAndGetCookie() {
   const response = await request(app.server).post('/auth/signup').send({
-    email: `user-${Date.now()}@example.com`,
+    email: `user-${randomUUID()}@example.com`,
     password: 'P@ssword123',
   });
-  return response.headers['set-cookie'];
+  expect(response.status).toBe(200);
+  const cookie = response.headers['set-cookie'];
+  expect(cookie).toBeDefined();
+  return cookie;
 }
 
 describe('Listings API', () => {

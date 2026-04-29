@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Listing as ListingModel } from '@prisma/client';
 
-import { requireAuth } from '../auth/require-auth';
+import { verifySessionPreHandler } from '../auth/verify-session';
 import { ListingRepository } from '../infrastructure/repositories/listing.repository';
 import {
   createListingSchema,
@@ -32,7 +32,7 @@ export async function registerListingRoutes(app: FastifyInstance): Promise<void>
     };
   });
 
-  app.post('/listings', { preHandler: requireAuth }, async (request, reply) => {
+  app.post('/listings', { preHandler: verifySessionPreHandler }, async (request, reply) => {
     const payload = createListingSchema.parse(request.body);
     const created = await listingRepository.create(payload);
     return reply.status(201).send({
@@ -54,25 +54,25 @@ export async function registerListingRoutes(app: FastifyInstance): Promise<void>
     };
   });
 
-  app.patch('/listings/:id', { preHandler: requireAuth }, async (request, reply) => {
+  app.patch('/listings/:id', { preHandler: verifySessionPreHandler }, async (request, reply) => {
     const { id } = listingIdParamSchema.parse(request.params);
     const payload = updateListingSchema.parse(request.body);
-    const listing = await listingRepository.findById(id);
-    if (!listing) {
+    const existing = await listingRepository.findById(id);
+    if (!existing) {
       return reply.status(404).send({ error: 'NOT_FOUND', message: 'Listing not found' });
     }
-    if (listing.status !== 'draft') {
+
+    const updated = await listingRepository.updateDraft(id, payload);
+    if (!updated) {
       return reply.status(422).send({ error: 'INVALID_STATE', message: 'Cannot modify listing when status is PUBLISHED' });
     }
-
-    const updated = await listingRepository.update(id, payload);
     return {
       ...updated,
       createdAt: updated.createdAt.toISOString(),
     };
   });
 
-  app.post('/listings/:id/publish', { preHandler: requireAuth }, async (request, reply) => {
+  app.post('/listings/:id/publish', { preHandler: verifySessionPreHandler }, async (request, reply) => {
     const { id } = listingIdParamSchema.parse(request.params);
     const listing = await listingRepository.findById(id);
     if (!listing) {

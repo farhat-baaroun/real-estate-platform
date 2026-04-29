@@ -49,7 +49,7 @@ export class ListingRepository {
       data: rows,
       meta: {
         totalCount,
-        pageCount: Math.max(1, Math.ceil(totalCount / limit)),
+        pageCount: Math.ceil(totalCount / limit),
         currentPage: page,
         perPage: limit,
       },
@@ -69,11 +69,17 @@ export class ListingRepository {
     });
   }
 
-  async update(id: string, data: UpdateListingData) {
-    return this.prisma.listing.update({
-      where: { id },
+  async updateDraft(id: string, data: UpdateListingData) {
+    const result = await this.prisma.listing.updateMany({
+      where: { id, status: 'draft' },
       data,
     });
+
+    if (result.count === 0) {
+      return null;
+    }
+
+    return this.prisma.listing.findUnique({ where: { id } });
   }
 
   async publish(id: string) {

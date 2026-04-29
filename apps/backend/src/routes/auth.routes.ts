@@ -1,9 +1,12 @@
 import type { FastifyInstance } from 'fastify';
+import { convertToRecipeUserId } from 'supertokens-node';
+import type { SessionRequest } from 'supertokens-node/framework/fastify';
+import { wrapRequest, wrapResponse } from 'supertokens-node/framework/fastify';
 import EmailPassword from 'supertokens-node/recipe/emailpassword';
+import Session from 'supertokens-node/recipe/session';
 import { z } from 'zod';
 
-import { requireAuth } from '../auth/require-auth';
-import { createSession, getSessionUserId, revokeSession } from '../auth/session';
+import { verifySessionPreHandler } from '../auth/verify-session';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -24,7 +27,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(422).send({ error: 'SIGNUP_FAILED', message: result.status });
     }
 
-    createSession(reply, result.user.id);
+    await Session.createNewSession(
+      wrapRequest(request),
+      wrapResponse(reply),
+      'public',
+      convertToRecipeUserId(result.user.id),
+    );
     return { userId: result.user.id };
   });
 
@@ -36,17 +44,22 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(401).send({ error: 'INVALID_CREDENTIALS', message: result.status });
     }
 
-    createSession(reply, result.user.id);
+    await Session.createNewSession(
+      wrapRequest(request),
+      wrapResponse(reply),
+      'public',
+      convertToRecipeUserId(result.user.id),
+    );
     return { userId: result.user.id };
   });
 
-  app.post('/auth/signout', { preHandler: requireAuth }, async (request, reply) => {
-    revokeSession(request, reply);
+  app.post('/auth/signout', { preHandler: verifySessionPreHandler }, async (request: SessionRequest) => {
+    await request.session!.revokeSession();
     return { ok: true };
   });
 
-  app.get('/auth/session', { preHandler: requireAuth }, async (request) => {
-    const userId = getSessionUserId(request)!;
+  app.get('/auth/session', { preHandler: verifySessionPreHandler }, async (request: SessionRequest) => {
+    const userId = request.session!.getUserId();
     return { userId };
   });
 }

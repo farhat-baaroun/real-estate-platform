@@ -1,4 +1,4 @@
-import { InvalidStateError, ListingStatus, Price, PropertyListing } from '@real-estate/domain';
+import { ListingStatus, Price, PropertyListing } from '@real-estate/domain';
 import { Temporal } from 'temporal-polyfill';
 
 type ListingRecord = {
@@ -13,7 +13,8 @@ type ListingRecord = {
 const toDomainStatus = (status: string): ListingStatus => {
   if (status === 'draft') return ListingStatus.DRAFT;
   if (status === 'published') return ListingStatus.PUBLISHED;
-  return ListingStatus.ARCHIVED;
+  if (status === 'archived') return ListingStatus.ARCHIVED;
+  throw new Error(`Invalid listing status "${status}". Expected one of: DRAFT, PUBLISHED, ARCHIVED.`);
 };
 
 export function publishListing(record: ListingRecord): { status: 'published' } {
@@ -26,10 +27,7 @@ export function publishListing(record: ListingRecord): { status: 'published' } {
     status: toDomainStatus(record.status),
   });
 
-  const published = aggregate.publish();
-  if (published.status !== ListingStatus.PUBLISHED) {
-    throw new InvalidStateError('Failed to publish listing');
-  }
+  aggregate.publish();
 
   return { status: 'published' };
 }

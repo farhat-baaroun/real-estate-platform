@@ -9,6 +9,15 @@ export const filterSchema = z
     bedrooms: z.coerce.number().int().optional(),
     status: z.enum(['draft', 'published', 'archived']).optional(),
   })
+  .superRefine((value, ctx) => {
+    if (value.minPrice !== undefined && value.maxPrice !== undefined && value.minPrice > value.maxPrice) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'minPrice must be less than or equal to maxPrice',
+        path: ['minPrice'],
+      });
+    }
+  })
   .default({});
 
 export const getListingsQuerySchema = z.object({
@@ -19,7 +28,7 @@ export const getListingsQuerySchema = z.object({
 });
 
 export const listingIdParamSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().regex(/^c[a-z0-9]{24}$/, 'id must be a valid cuid'),
 });
 
 export const createListingSchema = z.object({
