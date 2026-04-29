@@ -6,20 +6,26 @@ import { buildServer } from '../server';
 
 const app = buildServer();
 
-async function signUpAndGetCookie() {
-  const response = await request(app.server).post('/auth/signup').send({
-    email: `user-${randomUUID()}@example.com`,
-    password: 'P@ssword123',
-  });
-  expect(response.status).toBe(200);
-  const cookie = response.headers['set-cookie'];
-  expect(cookie).toBeDefined();
-  return cookie;
+/** Request `Cookie` header value from `Set-Cookie` response header(s). */
+function cookieHeaderFromSetCookie(setCookie: string | string[] | undefined): string {
+  if (!setCookie) return '';
+  const lines = Array.isArray(setCookie) ? setCookie : [setCookie];
+  return lines.map((line) => line.split(';')[0]?.trim()).filter(Boolean).join('; ');
 }
 
 describe('Listings API', () => {
+  /** One SuperTokens session for the whole file — avoids rate limits / flakes from many signups on CI. */
+  let authCookie: string;
+
   beforeAll(async () => {
     await app.ready();
+    const signup = await request(app.server).post('/auth/signup').send({
+      email: `listings-api-test-${randomUUID()}@example.com`,
+      password: 'P@ssword123',
+    });
+    expect(signup.status).toBe(200);
+    authCookie = cookieHeaderFromSetCookie(signup.headers['set-cookie']);
+    expect(authCookie.length).toBeGreaterThan(0);
   });
 
   afterAll(async () => {
@@ -39,8 +45,7 @@ describe('Listings API', () => {
   });
 
   it('POST /listings creates a listing', async () => {
-    const cookie = await signUpAndGetCookie();
-    const response = await request(app.server).post('/listings').set('Cookie', cookie ?? '').send({
+    const response = await request(app.server).post('/listings').set('Cookie', authCookie).send({
       title: 'Downtown Loft',
       price: 230000,
       bedrooms: 2,
@@ -52,8 +57,7 @@ describe('Listings API', () => {
   });
 
   it('POST /listings with invalid body returns 422', async () => {
-    const cookie = await signUpAndGetCookie();
-    const response = await request(app.server).post('/listings').set('Cookie', cookie ?? '').send({
+    const response = await request(app.server).post('/listings').set('Cookie', authCookie).send({
       title: '',
       price: 0,
       bedrooms: -1,
@@ -63,8 +67,7 @@ describe('Listings API', () => {
   });
 
   it('POST /listings/{id}/publish publishes a listing', async () => {
-    const cookie = await signUpAndGetCookie();
-    const created = await request(app.server).post('/listings').set('Cookie', cookie ?? '').send({
+    const created = await request(app.server).post('/listings').set('Cookie', authCookie).send({
       title: 'Townhouse',
       price: 410000,
       bedrooms: 4,
@@ -72,7 +75,7 @@ describe('Listings API', () => {
 
     const response = await request(app.server)
       .post(`/listings/${created.body.id}/publish`)
-      .set('Cookie', cookie ?? '')
+      .set('Cookie', authCookie)
       .send();
 
     expect(response.status).toBe(200);
@@ -90,8 +93,7 @@ describe('Listings API', () => {
   });
 
   it('GET /auth/session works with cookie', async () => {
-    const cookie = await signUpAndGetCookie();
-    const response = await request(app.server).get('/auth/session').set('Cookie', cookie ?? '');
+    const response = await request(app.server).get('/auth/session').set('Cookie', authCookie);
 
     expect(response.status).toBe(200);
     expect(response.body.userId).toBeTypeOf('string');
