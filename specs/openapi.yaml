@@ -8,6 +8,8 @@ info:
 servers:
   - url: http://localhost:3001
     description: Local dev
+security:
+  - cookieAuth: []
 tags:
   - name: Listings
     description: Listing management endpoints.
@@ -20,6 +22,7 @@ paths:
       summary: Sign up
       description: Registers a new user with email and password.
       tags: [Auth]
+      security: []
       requestBody:
         required: true
         content:
@@ -41,6 +44,7 @@ paths:
       summary: Sign in
       description: Authenticates a user and creates a session.
       tags: [Auth]
+      security: []
       requestBody:
         required: true
         content:
@@ -62,8 +66,6 @@ paths:
       summary: Sign out
       description: Revokes the active session.
       tags: [Auth]
-      security:
-        - cookieAuth: []
       responses:
         '200':
           description: Signed out
@@ -82,8 +84,6 @@ paths:
       summary: Get session
       description: Returns the active authenticated session.
       tags: [Auth]
-      security:
-        - cookieAuth: []
       responses:
         '200':
           description: Active session
@@ -99,6 +99,7 @@ paths:
       summary: Get paginated listings
       description: Returns a paginated list of property listings with sorting and filter options.
       tags: [Listings]
+      security: []
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Limit'
@@ -121,8 +122,6 @@ paths:
       summary: Create a new listing
       description: Creates a draft property listing.
       tags: [Listings]
-      security:
-        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -146,8 +145,6 @@ paths:
       summary: Publish a listing
       description: Publishes a draft listing if its domain invariants are satisfied.
       tags: [Listings]
-      security:
-        - cookieAuth: []
       parameters:
         - name: id
           in: path
@@ -173,6 +170,7 @@ paths:
       summary: Get a single listing
       description: Returns a single listing by identifier.
       tags: [Listings]
+      security: []
       parameters:
         - name: id
           in: path
@@ -193,8 +191,6 @@ paths:
       summary: Update a listing (draft only)
       description: Updates mutable listing fields while the listing is still in draft status.
       tags: [Listings]
-      security:
-        - cookieAuth: []
       parameters:
         - name: id
           in: path
