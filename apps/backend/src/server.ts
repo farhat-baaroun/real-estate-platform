@@ -22,7 +22,12 @@ export function buildServer(): FastifyInstance {
   initSuperTokens();
 
   app.decorate('prisma', prisma);
-  app.register(cors, { origin: true });
+  const isProd = process.env.NODE_ENV === 'production';
+  const corsAllowed = process.env.CORS_ALLOWED_ORIGINS?.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const corsOrigin = !isProd ? true : corsAllowed && corsAllowed.length > 0 ? corsAllowed : false;
+  app.register(cors, { origin: corsOrigin });
   app.register(cookie);
   app.register(superTokensPlugin);
   app.get('/health', async () => ({ status: 'ok' }));

@@ -74,6 +74,8 @@ paths:
                 properties:
                   ok:
                     type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /auth/session:
     get:
       operationId: getSession
@@ -90,7 +92,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthSession'
         '401':
-          $ref: '#/components/responses/ValidationError'
+          $ref: '#/components/responses/Unauthorized'
   /listings:
     get:
       operationId: getListings
@@ -134,6 +136,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
   /listings/{id}/publish:
@@ -157,6 +161,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
   /listings/{id}:
@@ -206,6 +214,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
 
@@ -258,12 +270,14 @@ components:
 
     AuthSession:
       type: object
+      required: [userId]
       properties:
         userId:
           type: string
 
     PaginationMeta:
       type: object
+      required: [totalCount, pageCount, currentPage, perPage]
       properties:
         totalCount:
           type: integer
@@ -303,6 +317,7 @@ components:
 
     UpdateListingInput:
       type: object
+      minProperties: 1
       properties:
         title:
           type: string
@@ -313,6 +328,7 @@ components:
 
     Listing:
       type: object
+      required: [id, title, price, bedrooms, status, createdAt]
       properties:
         id:
           type: string
@@ -331,6 +347,7 @@ components:
 
     ListingPage:
       type: object
+      required: [data, meta]
       properties:
         data:
           type: array
@@ -342,6 +359,7 @@ components:
 
     Error:
       type: object
+      required: [error, message]
       properties:
         error:
           type: string
@@ -362,7 +380,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
     Unauthorized:
-      description: Authentication failed
+      description: Unauthorized — authentication required
       content:
         application/json:
           schema:
