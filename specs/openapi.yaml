@@ -1,0 +1,388 @@
+openapi: 3.1.0
+info:
+  title: Real Estate API
+  version: 1.0.0
+  description: Canonical contract for listing and authentication APIs.
+  contact:
+    name: Real Estate Platform Team
+servers:
+  - url: http://localhost:3001
+    description: Local dev
+security:
+  - cookieAuth: []
+tags:
+  - name: Listings
+    description: Listing management endpoints.
+  - name: Auth
+    description: Authentication endpoints.
+paths:
+  /auth/signup:
+    post:
+      operationId: signUp
+      summary: Sign up
+      description: Registers a new user with email and password.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpInput'
+      responses:
+        '200':
+          description: User registered and session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /auth/signin:
+    post:
+      operationId: signIn
+      summary: Sign in
+      description: Authenticates a user and creates a session.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInInput'
+      responses:
+        '200':
+          description: User authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/signout:
+    post:
+      operationId: signOut
+      summary: Sign out
+      description: Revokes the active session.
+      tags: [Auth]
+      responses:
+        '200':
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/session:
+    get:
+      operationId: getSession
+      summary: Get session
+      description: Returns the active authenticated session.
+      tags: [Auth]
+      responses:
+        '200':
+          description: Active session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /listings:
+    get:
+      operationId: getListings
+      summary: Get paginated listings
+      description: Returns a paginated list of property listings with sorting and filter options.
+      tags: [Listings]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Sort'
+        - name: filter
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            $ref: '#/components/schemas/ListingFilter'
+      responses:
+        '200':
+          description: A page of listings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingPage'
+    post:
+      operationId: createListing
+      summary: Create a new listing
+      description: Creates a draft property listing.
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateListingInput'
+      responses:
+        '201':
+          description: Listing created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /listings/{id}/publish:
+    post:
+      operationId: publishListing
+      summary: Publish a listing
+      description: Publishes a draft listing if its domain invariants are satisfied.
+      tags: [Listings]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /listings/{id}:
+    get:
+      operationId: getListing
+      summary: Get a single listing
+      description: Returns a single listing by identifier.
+      tags: [Listings]
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateListing
+      summary: Update a listing (draft only)
+      description: Updates mutable listing fields while the listing is still in draft status.
+      tags: [Listings]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateListingInput'
+      responses:
+        '200':
+          description: Updated listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      schema:
+        type: string
+        enum: [createdAt_asc, createdAt_desc, price_asc, price_desc]
+        default: createdAt_desc
+
+  schemas:
+    SignUpInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    SignInInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthSession:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+
+    PaginationMeta:
+      type: object
+      required: [totalCount, pageCount, currentPage, perPage]
+      properties:
+        totalCount:
+          type: integer
+        pageCount:
+          type: integer
+        currentPage:
+          type: integer
+        perPage:
+          type: integer
+
+    ListingFilter:
+      type: object
+      properties:
+        minPrice:
+          type: number
+        maxPrice:
+          type: number
+        bedrooms:
+          type: integer
+        status:
+          type: string
+          enum: [draft, published, archived]
+
+    CreateListingInput:
+      type: object
+      required: [title, price, bedrooms]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        price:
+          type: number
+          exclusiveMinimum: 0
+        bedrooms:
+          type: integer
+          minimum: 0
+
+    UpdateListingInput:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+        bedrooms:
+          type: integer
+          minimum: 0
+
+    Listing:
+      type: object
+      required: [id, title, price, bedrooms, status, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: integer
+        status:
+          type: string
+          enum: [draft, published, archived]
+        createdAt:
+          type: string
+          format: date-time
+
+    ListingPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Listing'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized — authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sAccessToken
